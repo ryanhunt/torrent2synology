@@ -11,7 +11,12 @@
     const a = ev.target.closest?.("a[href]");
     if (!a) return;
     const href = a.href;
-    if (/^magnet:/i.test(href) || /\.torrent($|[?#])/i.test(href)) {
+    let isTorrent = /^magnet:/i.test(href);
+    try {
+      const u = new URL(href);
+      isTorrent ||= /^https?:$/.test(u.protocol) && /torrent/i.test(u.pathname + u.search);
+    } catch {}
+    if (isTorrent) {
       ev.preventDefault();
       ev.stopPropagation();
       api.runtime.sendMessage({ type: "send", link: href });

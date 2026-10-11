@@ -4,7 +4,9 @@ import { getConfig } from "./config.js";
 const api = globalThis.browser ?? globalThis.chrome;
 const MENU_PREFIX = "send-to-synology:";
 const PARENT_ID = "send-to-synology";
-const LINK_PATTERNS = ["magnet:*", "*://*/*.torrent", "*://*/*.torrent?*"];
+// Match patterns can't be regexes: magnets, plus any http(s) URL with "torrent" in its path or query
+// (covers /x.torrent and sites like /torrent/download/<hash>).
+const LINK_PATTERNS = ["magnet:*", "*://*/*torrent*"];
 
 function notify(title, message) {
   api.notifications.create({
@@ -60,8 +62,7 @@ async function buildMenu() {
   });
 }
 
-api.runtime.onInstalled.addListener(buildMenu);
-api.runtime.onStartup.addListener(buildMenu);
+buildMenu(); // runs each time the background wakes, so the menu is always present
 api.storage.onChanged.addListener((changes) => {
   if (changes.destinations) buildMenu();
 });

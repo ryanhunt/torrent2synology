@@ -2,7 +2,7 @@
 
 A Chrome and Firefox extension that sends torrent files and magnet links to a Synology Download Station.
 
-- Right-click a magnet link or `.torrent` link → **Send to Synology Download Station**
+- Right-click a magnet link or a torrent link (any URL with "torrent" in its path, e.g. `.torrent` files) → **Send to Synology Download Station**
 - Configurable download folders (e.g. TV Shows, Movies): with more than one, the right-click menu becomes a submenu so you pick where each download goes
 - Optional setting: left-click on such links sends them directly
 - Talks to DSM's Download Station Web API (auth v6 + task v1); no server component needed
