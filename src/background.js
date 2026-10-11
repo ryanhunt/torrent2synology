@@ -10,7 +10,7 @@ const LINK_PATTERNS = ["magnet:*", "*://*/*torrent*"];
 
 function notify(title, message) {
   api.notifications.create({
-    type: "basic", iconUrl: api.runtime.getURL("icons/icon.svg"), title, message,
+    type: "basic", iconUrl: api.runtime.getURL("icons/icon-128.png"), title, message,
   });
 }
 
@@ -37,12 +37,14 @@ async function send(link, destIndex = 0) {
         await addFile(cfg, await res.blob(), name.endsWith(".torrent") ? name : `${name}.torrent`, folder);
       } catch (fetchErr) {
         if (fetchErr.code) throw fetchErr; // Synology error, don't retry
+        console.warn("Fetching the torrent failed, asking the NAS to fetch it:", fetchErr);
         await addUri(cfg, link, folder);
       }
     }
     const where = dest ? ` → ${dest.name}` : "";
     notify(`Sent to Synology${where}`, link.length > 100 ? `${link.slice(0, 100)}…` : link);
   } catch (e) {
+    console.error("Send failed", e);
     notify("Failed to send to Synology", e.message);
   }
 }
