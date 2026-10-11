@@ -25,6 +25,9 @@ async function call(base, path, params, body, sid) {
   return json.data;
 }
 
+// Codes meaning "v1 task API not usable here": retry with the DSM 7 call.
+const V1_REJECTED = [101, 102, 103, 104];
+
 const API_ERRORS = {
   101: "invalid parameter",
   102: "API does not exist",
@@ -91,13 +94,18 @@ function taskForm(destination, sid) {
   return form;
 }
 
-/** Add a magnet link or http(s) URL to a .torrent. */
+/** Add a magnet link or http(s) URL. */
 export async function addUri(cfg, uri, destination) {
   const sid = await login(cfg);
   try {
-    const form = taskForm(destination, sid);
-    form.set("uri", uri);
-    await call(cfg.url, "DownloadStation/task.cgi", null, form, sid);
+    try {
+      const form = taskForm(destination, sid);
+      form.set("uri", uri);
+      await call(cfg.url, "DownloadStation/task.cgi", null, form, sid);
+    } catch (e) {
+      if (!V1_REJECTED.includes(e.code)) throw e;
+      await createV2(cfg, sid, { type: "url", url: [uri] }, destination);
+    }
   } finally {
     await logout(cfg, sid);
   }
@@ -113,24 +121,28 @@ export async function addFile(cfg, blob, filename, destination) {
       await call(cfg.url, "DownloadStation/task.cgi", null, form, sid);
     } catch (e) {
       // DSM 7 rejects the v1 upload for some setups; retry with the call DSM's own web UI uses.
-      if (![101, 102, 103, 104].includes(e.code)) throw e;
-      await addFileV2(cfg, sid, blob, filename, destination);
+      if (!V1_REJECTED.includes(e.code)) throw e;
+      await createV2(cfg, sid, { type: "file", blob, filename }, destination);
     }
   } finally {
     await logout(cfg, sid);
   }
 }
 
-async function addFileV2(cfg, sid, blob, filename, destination) {
+// DSM 7 web UI call (SYNO.DownloadStation2.Task); used when the v1 call is rejected.
+async function createV2(cfg, sid, { type, url, blob, filename }, destination) {
   const form = new FormData();
   form.set("api", "SYNO.DownloadStation2.Task");
   form.set("version", "2");
   form.set("method", "create");
-  form.set("type", JSON.stringify("file"));
-  form.set("file", JSON.stringify(["torrent"]));
+  form.set("type", JSON.stringify(type));
   form.set("create_list", "false");
+  if (url) form.set("url", JSON.stringify(url));
   if (destination) form.set("destination", JSON.stringify(destination.replace(/^\/+|\/+$/g, "")));
-  form.set("torrent", blob, filename);
+  if (blob) {
+    form.set("file", JSON.stringify(["torrent"]));
+    form.set("torrent", blob, filename); // file part last
+  }
   await call(cfg.url, "entry.cgi", null, form, sid);
 }
 
