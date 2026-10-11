@@ -7,7 +7,8 @@ async function call(base, path, params, body, sid) {
     if (sid) url.searchParams.set("_sid", sid); // multipart uploads: DSM also wants the session in the URL
     init = { method: "POST", body };
   } else {
-    for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
+    // POST the parameters (form-encoded) so credentials and session ids stay out of URLs and logs.
+    init = { method: "POST", body: new URLSearchParams(params) };
   }
   let res;
   try {
