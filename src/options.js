@@ -29,6 +29,7 @@ function showModifierHelp() {
   help.append(" while clicking.");
 }
 showModifierHelp();
+$("version").textContent = api.runtime.getManifest().version;
 
 const refreshLeftUI = () => { $("leftBox").hidden = !$("interceptClicks").checked; };
 
