@@ -8,10 +8,10 @@ const fields = ["url", "username", "leftClickFolder"];
 
 document.documentElement.dataset.bsTheme = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 
-const status = (msg, err) => {
+const status = (msg, err, info) => {
   const el = $("status");
   el.textContent = msg;
-  el.className = `alert mb-0 ${err ? "alert-danger" : "alert-success"}`;
+  el.className = `alert mb-0 ${info ? "alert-info" : err ? "alert-danger" : "alert-success"}`;
   el.hidden = false;
 };
 
@@ -61,6 +61,31 @@ async function ensureHostAccess(url) {
   const origin = `${new URL(url).origin}/*`;
   return api.permissions.request({ origins: [origin] });
 }
+
+// Full connection check: host access, HTTPS certificate, then a real DSM login (using the 2FA code
+// if one is entered). Returns null on success, else an error message. A successful 2FA login also
+// stores the trusted-device token.
+async function verifyConnection(cfg, pwd) {
+  try {
+    if (!(await ensureHostAccess(cfg.url))) return "Host permission denied.";
+    if (isHttps(cfg.url)) {
+      const problem = await checkHttps(cfg.url);
+      if (problem) return problem;
+    }
+    const did = await testConnection({ ...cfg, password: pwd });
+    if (did) {
+      deviceId = did;
+      await api.storage.local.set({ deviceId });
+      $("otp").value = "";
+      $("device").textContent = "This browser is now a trusted device; no code needed.";
+    }
+    return null;
+  } catch (e) {
+    return `Connection failed: ${e.message}`;
+  }
+}
+
+const setBusy = (busy) => document.querySelectorAll("#form button").forEach((b) => { b.disabled = busy; });
 
 let deviceId = "";
 let isProtected = false; // password currently stored encrypted
@@ -160,14 +185,16 @@ $("protect").addEventListener("change", async () => {
 $("form").addEventListener("submit", async (e) => {
   e.preventDefault();
   const cfg = read();
-  if (!(await ensureHostAccess(cfg.url))) return status("Host permission denied.", true);
-  if (isHttps(cfg.url)) {
-    const problem = await checkHttps(cfg.url);
-    if (problem) return status(`Not saved. ${problem}`, true);
-  }
   const pwd = await currentPassword();
   if (!pwd) return status(isProtected ? "Unlock first, or enter the password." : "Enter the password.", true);
+  // Settings are only saved if they actually connect.
+  status("Checking connection…", false, true);
+  setBusy(true);
+  const problem = await verifyConnection(cfg, pwd);
+  setBusy(false);
+  if (problem) return status(`Not saved. ${problem}`, true);
   const { otp, ...stored } = cfg;
+  stored.deviceId = deviceId; // may have just been issued by the 2FA login
 
   if ($("protect").checked) {
     const phrase = $("passphrase").value;
@@ -197,23 +224,11 @@ $("form").addEventListener("submit", async (e) => {
 
 $("test").addEventListener("click", async () => {
   const cfg = read();
-  try {
-    cfg.password = await currentPassword();
-    if (!cfg.password) return status(isProtected ? "Unlock first, or enter the password." : "Enter the password.", true);
-    if (!(await ensureHostAccess(cfg.url))) return status("Host permission denied.", true);
-    if (isHttps(cfg.url)) {
-      const problem = await checkHttps(cfg.url);
-      if (problem) return status(problem, true);
-    }
-    const did = await testConnection(cfg);
-    if (did) {
-      deviceId = did;
-      await api.storage.local.set({ deviceId });
-      $("otp").value = "";
-      $("device").textContent = "This browser is now a trusted device; no code needed.";
-    }
-    status("Connection OK.");
-  } catch (e) {
-    status(`Failed: ${e.message}`, true);
-  }
+  const pwd = await currentPassword();
+  if (!pwd) return status(isProtected ? "Unlock first, or enter the password." : "Enter the password.", true);
+  status("Checking connection…", false, true);
+  setBusy(true);
+  const problem = await verifyConnection(cfg, pwd);
+  setBusy(false);
+  status(problem ?? "Connection OK.", !!problem);
 });
