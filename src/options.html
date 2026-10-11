@@ -15,6 +15,9 @@
           <label for="url" class="form-label">Download Station URL</label>
           <input id="url" type="url" class="form-control" placeholder="https://nas.local:5001" required>
           <div class="form-text">Full address including the port, as you use it in your browser for DSM.</div>
+          <div id="httpsWarn" class="alert alert-warning mt-2 mb-0" hidden>
+            <strong>HTTPS needs a trusted certificate.</strong> DSM's default certificate is self-signed, and the browser rejects it for the extension even if you have clicked through the warning in a tab. Use the <code>http://</code> address, or install a trusted certificate on the NAS (for example Let's Encrypt in DSM's Security settings). Saving checks this.
+          </div>
         </div>
         <div>
           <label for="username" class="form-label">Username</label>

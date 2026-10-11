@@ -30,6 +30,32 @@ function read() {
   return cfg;
 }
 
+const isHttps = (url) => /^https:\/\//i.test(url.trim());
+const refreshHttpsWarn = () => { $("httpsWarn").hidden = !isHttps($("url").value); };
+
+// Probes an https server. Chrome/Firefox don't expose certificates to extensions, but webRequest
+// reports the network error (e.g. net::ERR_CERT_AUTHORITY_INVALID), which tells cert problems from
+// an unreachable server. Returns null when fine, else an error message.
+async function checkHttps(url) {
+  const origin = new URL(url).origin;
+  let netError = "";
+  const onError = (d) => { netError = d.error; };
+  api.webRequest.onErrorOccurred.addListener(onError, { urls: [`${origin}/*`] });
+  try {
+    const probe = `${origin}/webapi/entry.cgi?api=SYNO.API.Info&version=1&method=query&query=SYNO.API.Auth`;
+    await fetch(probe, { credentials: "omit", signal: AbortSignal.timeout(8000) });
+    return null;
+  } catch {
+    await new Promise((r) => setTimeout(r, 150)); // let the webRequest event arrive
+    if (/CERT|SSL|PKIX|TLS/i.test(netError)) {
+      return `The HTTPS certificate for ${origin} isn't trusted by your browser (likely self-signed; ${netError}), so the extension can't connect. Use the http:// address, or install a trusted certificate on the NAS.`;
+    }
+    return `Couldn't establish a secure connection to ${origin}${netError ? ` (${netError})` : ""}. Check the address and port; if it is correct, the certificate is probably untrusted.`;
+  } finally {
+    api.webRequest.onErrorOccurred.removeListener(onError);
+  }
+}
+
 // The NAS is an arbitrary origin, so request host access at runtime.
 async function ensureHostAccess(url) {
   const origin = `${new URL(url).origin}/*`;
@@ -76,11 +102,13 @@ getConfig().then((cfg) => {
   if (deviceId) $("device").textContent = "This browser is a trusted device; no code needed.";
   $("interceptClicks").checked = cfg.interceptClicks;
   refreshLeftUI();
+  refreshHttpsWarn();
 });
 
 $("add").addEventListener("click", () => addRow());
 
 $("interceptClicks").addEventListener("change", refreshLeftUI);
+$("url").addEventListener("input", refreshHttpsWarn);
 
 $("unlock").addEventListener("click", async () => {
   try {
@@ -133,6 +161,10 @@ $("form").addEventListener("submit", async (e) => {
   e.preventDefault();
   const cfg = read();
   if (!(await ensureHostAccess(cfg.url))) return status("Host permission denied.", true);
+  if (isHttps(cfg.url)) {
+    const problem = await checkHttps(cfg.url);
+    if (problem) return status(`Not saved. ${problem}`, true);
+  }
   const pwd = await currentPassword();
   if (!pwd) return status(isProtected ? "Unlock first, or enter the password." : "Enter the password.", true);
   const { otp, ...stored } = cfg;
@@ -169,6 +201,10 @@ $("test").addEventListener("click", async () => {
     cfg.password = await currentPassword();
     if (!cfg.password) return status(isProtected ? "Unlock first, or enter the password." : "Enter the password.", true);
     if (!(await ensureHostAccess(cfg.url))) return status("Host permission denied.", true);
+    if (isHttps(cfg.url)) {
+      const problem = await checkHttps(cfg.url);
+      if (problem) return status(problem, true);
+    }
     const did = await testConnection(cfg);
     if (did) {
       deviceId = did;

@@ -3,7 +3,7 @@
   "name": "Torrent2Synology",
   "version": "0.1.0",
   "description": "Send torrent files and magnet links to Synology Download Station.",
-  "permissions": ["contextMenus", "storage", "notifications"],
+  "permissions": ["contextMenus", "storage", "notifications", "webRequest"],
   "host_permissions": ["http://*/*", "https://*/*"],
   "background": {
     "service_worker": "background.js",
