@@ -159,9 +159,38 @@ async function createV2(cfg, sid, { type, url, blob, filename }, destination) {
   await call(cfg.url, "entry.cgi", null, form, sid);
 }
 
-/** Returns the trusted-device id when a 2FA code was used, else undefined. */
-export async function testConnection(cfg) {
+/**
+ * true/false if the folder exists, null if it can't be determined (e.g. the account has no
+ * File Station permission; Download Station itself doesn't need that).
+ */
+async function folderExists(cfg, sid, folder) {
+  try {
+    await call(cfg.url, "entry.cgi", {
+      api: "SYNO.FileStation.List", version: "2", method: "list",
+      folder_path: `/${folder.replace(/^\/+|\/+$/g, "")}`, limit: "1", _sid: sid,
+    });
+    return true;
+  } catch (e) {
+    return e.code === 408 ? false : null; // 408: no such file or directory
+  }
+}
+
+/**
+ * Logs in (using cfg.otp if set) and checks that each folder exists.
+ * Returns { did, missing, unverified }; did is the trusted-device id when a 2FA code was used.
+ */
+export async function testConnection(cfg, folders = []) {
   const { sid, did } = await loginFull(cfg);
-  await logout(cfg, sid);
-  return did;
+  const missing = [];
+  let unverified = false;
+  try {
+    for (const folder of folders) {
+      const exists = await folderExists(cfg, sid, folder);
+      if (exists === false) missing.push(folder);
+      if (exists === null) unverified = true;
+    }
+  } finally {
+    await logout(cfg, sid);
+  }
+  return { did, missing, unverified };
 }

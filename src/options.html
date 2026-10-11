@@ -60,7 +60,7 @@
     <section class="card">
       <div class="card-header fw-semibold">Download folders</div>
       <div class="card-body">
-        <p class="form-text mt-0">Right-clicking a link offers each destination below. Folder is relative to the share root (e.g. <code>video/TV Shows</code>); leave blank for the Download Station default.</p>
+        <p class="form-text mt-0">Right-clicking a link offers each destination below. Folder is relative to the share root (e.g. <code>video/TV Shows</code>); leave blank for the Download Station default. Saving checks that each folder exists.</p>
         <div id="destinations"></div>
         <button type="button" id="add" class="btn btn-sm btn-outline-secondary">Add destination</button>
       </div>
@@ -68,13 +68,14 @@
 
     <section class="card">
       <div class="card-header d-flex justify-content-between align-items-center">
-        <label for="interceptClicks" class="fw-semibold mb-0">Left click</label>
+        <label for="interceptClicks" class="fw-semibold mb-0">Capture Left Clicks</label>
         <div class="form-check form-switch mb-0">
           <input id="interceptClicks" type="checkbox" class="form-check-input" role="switch">
         </div>
       </div>
       <div id="leftBox" class="card-body" hidden>
-        <p class="form-text mt-0">Send magnet / .torrent links on left-click instead of opening them. Hold Ctrl, Cmd, Shift or Alt to open normally.</p>
+        <p class="form-text mt-0 mb-2">Send only magnet / .torrent links on left-click instead of opening them. All other links are not handled.</p>
+        <p id="modifierHelp" class="form-text mt-0"></p>
         <label for="leftClickFolder" class="form-label">Left-click folder</label>
         <input id="leftClickFolder" type="text" class="form-control" placeholder="e.g. video/Downloads">
         <div class="form-text">Blank = Download Station's default folder.</div>

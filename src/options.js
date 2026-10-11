@@ -15,6 +15,21 @@ const status = (msg, err, info) => {
   el.hidden = false;
 };
 
+// Modifier keys that make a click skip capture, shown with the right names for the platform.
+function showModifierHelp() {
+  const mac = /mac/i.test(navigator.userAgentData?.platform ?? navigator.platform);
+  const keys = mac ? ["⌘ Command", "⌥ Option", "⇧ Shift", "⌃ Control"] : ["Ctrl", "Alt", "Shift"];
+  const help = $("modifierHelp");
+  help.append("To open a link normally, hold ");
+  keys.forEach((k, i) => {
+    const kbd = document.createElement("kbd");
+    kbd.textContent = k;
+    help.append(kbd, i < keys.length - 2 ? ", " : i === keys.length - 2 ? " or " : "");
+  });
+  help.append(" while clicking.");
+}
+showModifierHelp();
+
 const refreshLeftUI = () => { $("leftBox").hidden = !$("interceptClicks").checked; };
 
 function read() {
@@ -62,26 +77,33 @@ async function ensureHostAccess(url) {
   return api.permissions.request({ origins: [origin] });
 }
 
-// Full connection check: host access, HTTPS certificate, then a real DSM login (using the 2FA code
-// if one is entered). Returns null on success, else an error message. A successful 2FA login also
-// stores the trusted-device token.
+// Full check: host access, HTTPS certificate, a real DSM login (using the 2FA code if one is
+// entered), then that each download folder exists. Returns { problem } on failure, else { note }
+// (an optional caveat). A successful 2FA login also stores the trusted-device token.
 async function verifyConnection(cfg, pwd) {
   try {
-    if (!(await ensureHostAccess(cfg.url))) return "Host permission denied.";
+    if (!(await ensureHostAccess(cfg.url))) return { problem: "Host permission denied." };
     if (isHttps(cfg.url)) {
       const problem = await checkHttps(cfg.url);
-      if (problem) return problem;
+      if (problem) return { problem };
     }
-    const did = await testConnection({ ...cfg, password: pwd });
+    const folders = [...new Set([
+      ...cfg.destinations.map((d) => d.folder),
+      ...(cfg.interceptClicks ? [cfg.leftClickFolder] : []),
+    ].filter(Boolean))];
+    const { did, missing, unverified } = await testConnection({ ...cfg, password: pwd }, folders);
     if (did) {
       deviceId = did;
       await api.storage.local.set({ deviceId });
       $("otp").value = "";
       $("device").textContent = "This browser is now a trusted device; no code needed.";
     }
-    return null;
+    if (missing.length) {
+      return { problem: `These folders don't exist on the NAS: ${missing.join(", ")}. Paths are relative to the share root, e.g. video/Movies.` };
+    }
+    return { note: unverified ? " Folders couldn't be verified (the account needs File Station permission for that)." : "" };
   } catch (e) {
-    return `Connection failed: ${e.message}`;
+    return { problem: `Connection failed: ${e.message}` };
   }
 }
 
@@ -190,7 +212,7 @@ $("form").addEventListener("submit", async (e) => {
   // Settings are only saved if they actually connect.
   status("Checking connection…", false, true);
   setBusy(true);
-  const problem = await verifyConnection(cfg, pwd);
+  const { problem, note } = await verifyConnection(cfg, pwd);
   setBusy(false);
   if (problem) return status(`Not saved. ${problem}`, true);
   const { otp, ...stored } = cfg;
@@ -219,7 +241,7 @@ $("form").addEventListener("submit", async (e) => {
     isProtected = false;
   }
   refreshProtectUI();
-  status("Saved.");
+  status(`Saved.${note}`);
 });
 
 $("test").addEventListener("click", async () => {
@@ -228,7 +250,7 @@ $("test").addEventListener("click", async () => {
   if (!pwd) return status(isProtected ? "Unlock first, or enter the password." : "Enter the password.", true);
   status("Checking connection…", false, true);
   setBusy(true);
-  const problem = await verifyConnection(cfg, pwd);
+  const { problem, note } = await verifyConnection(cfg, pwd);
   setBusy(false);
-  status(problem ?? "Connection OK.", !!problem);
+  status(problem ?? `Connection OK.${note}`, !!problem);
 });
