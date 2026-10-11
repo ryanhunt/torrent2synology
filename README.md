@@ -13,7 +13,7 @@ A Chrome and Firefox extension that sends torrent files and magnet links to a Sy
 npm install
 npm run run:firefox   # or run:chrome — launches a browser with the extension loaded
 npm run lint
-npm run build         # dist/torrent2synology-chrome-<version>.zip
+npm run build         # dist/torrent2synology-{chrome,firefox}-<version>.zip
 ```
 
 Source lives in `src/` (plain JS, no bundler). The options page uses Bootstrap's CSS, vendored at `src/vendor/bootstrap.min.css` (refresh it with `npm run vendor` after upgrading the `bootstrap` dev dependency). Manual load: Chrome → `chrome://extensions` → Load unpacked → `src/`; Firefox → `about:debugging` → Load Temporary Add-on → `src/manifest.json`.
@@ -25,7 +25,7 @@ Loading from `about:debugging` (Firefox) is temporary: Firefox removes the add-o
 ### Chrome
 
 - **Load unpacked (simplest):** `chrome://extensions` → turn on **Developer mode** → **Load unpacked** → select the `src/` folder. Keep that folder in place; Chrome reads it directly, and settings persist across restarts. Chrome may nag about developer-mode extensions at startup, and a managed (work) browser may block this.
-- **Chrome Web Store:** run `npm run build` and upload `dist/torrent2synology-chrome-<version>.zip` and `dist/torrent2synology-firefox-<version>.zip` to the [Chrome Web Store developer dashboard](https://chrome.google.com/webstore/devconsole) (one-time developer fee). You can publish it as *Unlisted* so only people with the link can install it, and Chrome then updates it for you.
+- **Chrome Web Store:** run `npm run build` and upload `dist/torrent2synology-chrome-<version>.zip` to the [Chrome Web Store developer dashboard](https://chrome.google.com/webstore/devconsole) (one-time developer fee). You can publish it as *Unlisted* so only people with the link can install it, and Chrome then updates it for you.
 
 ### Firefox
 
@@ -37,7 +37,7 @@ Release Firefox only installs add-ons signed by Mozilla. An unlisted signature i
 3. Sign it:
 
    ```bash
-   npx web-ext sign --source-dir src --channel unlisted \
+   npm run build && npx web-ext sign --source-dir dist/firefox --channel unlisted \
      --api-key "$AMO_JWT_ISSUER" --api-secret "$AMO_JWT_SECRET"
    ```
 
