@@ -80,7 +80,6 @@ getConfig().then((cfg) => {
 
 $("add").addEventListener("click", () => addRow());
 
-$("protect").addEventListener("change", refreshProtectUI);
 $("interceptClicks").addEventListener("change", refreshLeftUI);
 
 $("unlock").addEventListener("click", async () => {
@@ -102,8 +101,8 @@ $("lock").addEventListener("click", async () => {
   refreshProtectUI();
 });
 
-$("forgot").addEventListener("click", async () => {
-  if (!confirm("This permanently deletes the stored (encrypted) password. Your other settings are kept. Continue?")) return;
+// Deletes the encrypted password (and the unlocked copy); other settings are kept.
+async function clearStoredPassword(message) {
   await api.storage.local.remove(["password", "encrypted"]);
   await api.storage.local.set({ passwordProtected: false });
   await api.storage.session.remove("password");
@@ -112,7 +111,22 @@ $("forgot").addEventListener("click", async () => {
   $("password").value = "";
   $("passphrase").value = "";
   refreshProtectUI();
-  status("Stored password cleared. Enter the password again and click Save.");
+  status(message);
+}
+
+const CONFIRM_CLEAR = "This permanently deletes the stored (encrypted) password. Your other settings are kept. Continue?";
+const CLEARED = "Stored password cleared. Enter the password again and click Save.";
+
+$("forgot").addEventListener("click", async () => {
+  if (confirm(CONFIRM_CLEAR)) await clearStoredPassword(CLEARED);
+});
+
+// Turning encryption off while a password is stored encrypted clears it, like the button.
+$("protect").addEventListener("change", async () => {
+  if ($("protect").checked || !isProtected) return refreshProtectUI();
+  if (confirm(CONFIRM_CLEAR)) await clearStoredPassword(CLEARED);
+  else $("protect").checked = true;
+  refreshProtectUI();
 });
 
 $("form").addEventListener("submit", async (e) => {
