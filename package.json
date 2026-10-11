@@ -3,9 +3,11 @@
   "version": "0.1.0",
   "description": "Send torrent files and magnet links to Synology Download Station",
   "private": true,
+  "type": "module",
   "license": "MIT",
   "scripts": {
     "prepare": "git config core.hooksPath .githooks",
+    "test": "node scripts/test-crypto.mjs",
     "check:secrets": "node scripts/check-secrets.mjs staged",
     "lint": "web-ext lint --source-dir src",
     "run:firefox": "web-ext run --source-dir src",

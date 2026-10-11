@@ -20,6 +20,10 @@ async function send(link, destIndex = 0) {
     api.runtime.openOptionsPage();
     return notify("Torrent2Synology", "Configure your NAS connection first.");
   }
+  if (cfg.locked) {
+    api.runtime.openOptionsPage();
+    return notify("Torrent2Synology", "Locked: enter your passphrase in the settings to unlock.");
+  }
   const dest = destIndex === null
     ? { name: "default folder", folder: cfg.leftClickFolder }
     : cfg.destinations[destIndex] ?? cfg.destinations[0];

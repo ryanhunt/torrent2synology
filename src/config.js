@@ -3,7 +3,7 @@
 const api = globalThis.browser ?? globalThis.chrome;
 
 export const DEFAULTS = {
-  url: "", username: "", password: "", interceptClicks: false, leftClickFolder: "", deviceId: "",
+  url: "", username: "", password: "", passwordProtected: false, encrypted: null, interceptClicks: false, leftClickFolder: "", deviceId: "",
   destinations: [{ name: "TV Shows", folder: "" }, { name: "Movies", folder: "" }],
   destination: "", // legacy single folder, migrated below
 };
@@ -17,6 +17,12 @@ export async function getConfig() {
     api.storage.local.set({ destinations: cfg.destinations });
     api.storage.local.remove("destination");
     cfg.destination = "";
+  }
+  // When protected, the decrypted password only exists in session storage (memory, cleared on browser close).
+  cfg.locked = false;
+  if (cfg.passwordProtected) {
+    cfg.password = (await api.storage.session.get({ password: "" })).password;
+    cfg.locked = !cfg.password;
   }
   return cfg;
 }
