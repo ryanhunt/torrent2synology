@@ -8,7 +8,12 @@ async function call(base, path, params, body) {
   } else {
     for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
   }
-  const res = await fetch(url, { ...init, credentials: "omit" });
+  let res;
+  try {
+    res = await fetch(url, { ...init, credentials: "omit" });
+  } catch (e) {
+    throw new Error(`Cannot reach ${url.origin} (${e.message}). Check the address, certificate and site access.`);
+  }
   const json = await res.json();
   if (!json.success) {
     const e = new Error(`Synology API error ${json.error?.code ?? "?"} (${path})`);
