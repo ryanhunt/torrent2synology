@@ -39,8 +39,6 @@ function addRow(d = { name: "", folder: "" }) {
   $("destinations").append(row);
 }
 
-let deviceId = "";
-
 getConfig().then((cfg) => {
   fields.forEach((f) => { $(f).value = cfg[f]; });
   cfg.destinations.forEach(addRow);
