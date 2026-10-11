@@ -129,8 +129,21 @@ export async function addFile(cfg, blob, filename, destination) {
   }
 }
 
+async function defaultDestination(cfg, sid) {
+  try {
+    const data = await call(cfg.url, "DownloadStation/info.cgi", {
+      api: "SYNO.DownloadStation.Info", version: "1", method: "getconfig", _sid: sid,
+    });
+    return String(data.default_destination ?? "").replace(/^\/volume\d+\//, "");
+  } catch {
+    return "";
+  }
+}
+
 // DSM 7 web UI call (SYNO.DownloadStation2.Task); used when the v1 call is rejected.
 async function createV2(cfg, sid, { type, url, blob, filename }, destination) {
+  // This call needs an explicit destination, so fall back to Download Station's configured default.
+  destination ||= await defaultDestination(cfg, sid);
   const form = new FormData();
   form.set("api", "SYNO.DownloadStation2.Task");
   form.set("version", "2");
