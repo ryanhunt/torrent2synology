@@ -36,7 +36,7 @@ const currentPassword = async () => $("password").value || (isProtected ? sessio
 
 async function refreshProtectUI() {
   $("protectBox").hidden = !$("protect").checked;
-  $("unlock").hidden = $("lock").hidden = !isProtected;
+  $("unlock").hidden = $("lock").hidden = $("forgot").hidden = !isProtected;
   $("password").placeholder = isProtected ? "Stored encrypted" : "";
   $("lockstatus").textContent = !isProtected
     ? "Enter a passphrase and click Save. You will unlock once per browser session; the password is kept in memory only while unlocked."
@@ -89,6 +89,19 @@ $("lock").addEventListener("click", async () => {
   await api.storage.session.remove("password");
   status("Locked.");
   refreshProtectUI();
+});
+
+$("forgot").addEventListener("click", async () => {
+  if (!confirm("This permanently deletes the saved (encrypted) password. Your other settings are kept. Continue?")) return;
+  await api.storage.local.remove(["password", "encrypted"]);
+  await api.storage.local.set({ passwordProtected: false });
+  await api.storage.session.remove("password");
+  isProtected = false;
+  $("protect").checked = false;
+  $("password").value = "";
+  $("passphrase").value = "";
+  refreshProtectUI();
+  status("Saved password deleted. Enter the password again and click Save.");
 });
 
 $("form").addEventListener("submit", async (e) => {
