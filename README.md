@@ -22,10 +22,14 @@ Source lives in `src/` (plain JS, no bundler). Manual load: Chrome → `chrome:/
 
 Open the extension options, enter your NAS URL (the same address you use to reach DSM, including its port), a DSM username/password, and one or more download folders (labels like TV Shows / Movies mapped to NAS folders, relative to the share root such as `video/Movies`), then **Test connection**. Use a dedicated DSM account limited to Download Station. If the account uses 2-step verification, enter a current code in the options and click **Test connection** once. DSM registers the browser as a trusted device and the extension stores the device token, so later sends need no code. If DSM revokes the device (e.g. you remove it under Security), repeat that step. Only the DSM Web API is supported (no QuickConnect or other protocols).
 
+## Password protection (optional, off by default)
+
+Tick **Protect the password with a passphrase** in the options and click Save. The password is then stored encrypted (PBKDF2 + AES-GCM); the decrypted copy lives only in session storage (memory) and is wiped when the browser closes. After a restart, sends open the settings page until you unlock with your passphrase. If you forget the passphrase, just re-enter the password. `npm test` runs the crypto round-trip tests.
+
 ## Notes / TODO
 
 - Self-signed NAS certificates must be trusted by the browser.
-- Possible later: toolbar popup with task list, DSM 7 `SYNO.DownloadStation2` API, encrypted credential storage.
+- Possible later: toolbar popup with task list, DSM 7 `SYNO.DownloadStation2` API.
 
 ## Safeguards: no personal connection details in git
 
