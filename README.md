@@ -34,4 +34,4 @@ Your real NAS hostname, username and password must never be committed or pushed.
 - **Personal blocklist:** put your real hostname (and anything else private) in `.git/secret-blocklist`, one per line. It lives inside `.git`, so it is never committed or pushed. Or set `T2S_BLOCKLIST=host1,host2`.
 - Git hooks in `.githooks/` run the scanner on `pre-commit` (staged files), `commit-msg`, and `pre-push` (every commit being pushed). `npm install` enables them via `core.hooksPath`; otherwise run `git config core.hooksPath .githooks`.
 - `.gitignore` excludes `.env*`, `*.local*`, keys and certs.
-- A GitHub Actions workflow re-scans history for generic patterns as a backstop (it can't know your blocklist, and hooks are client-side so `--no-verify` skips them).
+- No GitHub Actions are used in this repo; the local hooks are the only enforcement (`--no-verify` skips them).
