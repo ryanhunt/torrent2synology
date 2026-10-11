@@ -61,14 +61,8 @@ Tick **Protect the password with a passphrase** in the options and click Save. T
 ## Notes / TODO
 
 - Self-signed NAS certificates must be trusted by the browser.
-- Possible later: toolbar popup with task list, DSM 7 `SYNO.DownloadStation2` API.
+- Possible later: toolbar popup with task list, automatic TV/Movie sorting by filename.
 
-## Safeguards: no personal connection details in git
+## License
 
-Your real NAS hostname, username and password must never be committed or pushed. They live only in the browser's extension storage. Sample hostnames and ports (e.g. `nas.local`, `5001`) are fine in code and docs.
-
-- `scripts/check-secrets.mjs` blocks literal credentials, personal DDNS/QuickConnect hostnames, secret-looking files, and anything in your personal blocklist.
-- **Personal blocklist:** put your real hostname (and anything else private) in `.git/secret-blocklist`, one per line. It lives inside `.git`, so it is never committed or pushed. Or set `T2S_BLOCKLIST=host1,host2`.
-- Git hooks in `.githooks/` run the scanner on `pre-commit` (staged files), `commit-msg`, and `pre-push` (every commit being pushed). `npm install` enables them via `core.hooksPath`; otherwise run `git config core.hooksPath .githooks`.
-- `.gitignore` excludes `.env*`, `*.local*`, keys and certs.
-- No GitHub Actions are used in this repo; the local hooks are the only enforcement (`--no-verify` skips them).
+MIT, see [LICENSE](LICENSE). See [PRIVACY.md](PRIVACY.md) for what the extension stores and sends.
