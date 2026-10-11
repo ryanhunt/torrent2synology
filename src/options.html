@@ -27,10 +27,13 @@
   <input id="otp" type="text" inputmode="numeric" autocomplete="one-time-code" placeholder="123456">
   <small id="device">Enter a current code and click Test connection once. DSM then remembers this browser as a trusted device, so no further codes are needed.</small>
   <label>Download folders</label>
-  <small>Right-clicking a link offers each destination below. Folder is relative to the share root (e.g. <code>video/TV Shows</code>); leave blank for the Download Station default. The first row is used for left-click sends.</small>
+  <small>Right-clicking a link offers each destination below. Folder is relative to the share root (e.g. <code>video/TV Shows</code>); leave blank for the Download Station default.</small>
   <div id="destinations"></div>
   <button type="button" id="add">Add destination</button>
   <label class="check"><input id="interceptClicks" type="checkbox"> Send magnet / .torrent links on left-click (instead of opening them)</label>
+  <label for="leftClickFolder">Left-click folder</label>
+  <input id="leftClickFolder" type="text" placeholder="e.g. video/Downloads">
+  <small>Used for left-click sends (the option above). Blank = Download Station's default folder.</small>
   <button type="submit">Save</button>
   <button type="button" id="test">Test connection</button>
 </form>

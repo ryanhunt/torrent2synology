@@ -1,9 +1,9 @@
 // Shared settings access. Each destination maps a label (shown in the right-click menu)
-// to a folder on the NAS; the first one is the default used for left-click sends.
+// to a folder on the NAS. leftClickFolder is the separate folder used for left-click sends.
 const api = globalThis.browser ?? globalThis.chrome;
 
 export const DEFAULTS = {
-  url: "", username: "", password: "", interceptClicks: false, deviceId: "",
+  url: "", username: "", password: "", interceptClicks: false, leftClickFolder: "", deviceId: "",
   destinations: [{ name: "TV Shows", folder: "" }, { name: "Movies", folder: "" }],
   destination: "", // legacy single folder, migrated below
 };

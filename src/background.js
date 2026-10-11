@@ -13,13 +13,16 @@ function notify(title, message) {
 const isMagnet = (u) => /^magnet:/i.test(u);
 const isTorrentUrl = (u) => /torrent/i.test(u.replace(/^[a-z]+:\/\/[^/]*/i, ""));
 
+// destIndex null = left-click send, which uses the dedicated left-click folder.
 async function send(link, destIndex = 0) {
   const cfg = await getConfig();
   if (!cfg.url || !cfg.username) {
     api.runtime.openOptionsPage();
     return notify("Torrent2Synology", "Configure your NAS connection first.");
   }
-  const dest = cfg.destinations[destIndex] ?? cfg.destinations[0];
+  const dest = destIndex === null
+    ? { name: "default folder", folder: cfg.leftClickFolder }
+    : cfg.destinations[destIndex] ?? cfg.destinations[0];
   const folder = dest?.folder ?? "";
   try {
     if (isMagnet(link) || !isTorrentUrl(link)) {
@@ -74,7 +77,7 @@ api.contextMenus.onClicked.addListener((info) => {
 });
 
 api.runtime.onMessage.addListener((msg) => {
-  if (msg?.type === "send" && typeof msg.link === "string") send(msg.link);
+  if (msg?.type === "send" && typeof msg.link === "string") send(msg.link, null);
 });
 
 api.action.onClicked.addListener(() => api.runtime.openOptionsPage());

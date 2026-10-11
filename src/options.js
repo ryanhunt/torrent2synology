@@ -3,7 +3,7 @@ import { getConfig } from "./config.js";
 
 const api = globalThis.browser ?? globalThis.chrome;
 const $ = (id) => document.getElementById(id);
-const fields = ["url", "username", "password"];
+const fields = ["url", "username", "password", "leftClickFolder"];
 
 const status = (msg, err) => { $("status").textContent = msg; $("status").style.color = err ? "crimson" : "green"; };
 
