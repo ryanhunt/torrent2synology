@@ -1,0 +1,30 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Torrent2Synology settings</title>
+<style>
+  body { font: 14px system-ui, sans-serif; max-width: 480px; margin: 2rem auto; padding: 0 1rem; }
+  label { display: block; margin: .8rem 0 .2rem; font-weight: 600; }
+  input[type=text], input[type=url], input[type=password] { width: 100%; padding: .4rem; box-sizing: border-box; }
+  .check { font-weight: normal; }
+  button { margin: 1rem .5rem 0 0; padding: .4rem 1rem; }
+  #status { margin-top: 1rem; min-height: 1.2em; }
+  small { color: #666; }
+</style>
+<h1>Torrent2Synology</h1>
+<form id="form">
+  <label for="url">Download Station URL</label>
+  <input id="url" type="url" placeholder="https://nas.local:5001" required>
+  <small>Full address including the port, as you use it in your browser for DSM.</small>
+  <label for="username">Username</label>
+  <input id="username" type="text" autocomplete="username" required>
+  <label for="password">Password</label>
+  <input id="password" type="password" autocomplete="current-password">
+  <small>Stored unencrypted in browser extension storage. Use a dedicated DSM account with only Download Station permission.</small>
+  <label for="destination">Destination folder (optional)</label>
+  <input id="destination" type="text" placeholder="share/downloads">
+  <label class="check"><input id="interceptClicks" type="checkbox"> Send magnet / .torrent links on left-click (instead of opening them)</label>
+  <button type="submit">Save</button>
+  <button type="button" id="test">Test connection</button>
+</form>
+<div id="status"></div>
+<script type="module" src="options.js"></script>

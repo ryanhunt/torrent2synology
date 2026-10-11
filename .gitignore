@@ -1,0 +1,12 @@
+node_modules/
+dist/
+*.zip
+.DS_Store
+
+# Local-only config: never commit connection details
+.env
+.env.*
+*.local
+*.local.*
+*.pem
+*.key
