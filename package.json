@@ -1,6 +1,6 @@
 {
   "name": "torrent2synology",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Send torrent files and magnet links to Synology Download Station",
   "private": true,
   "type": "module",
