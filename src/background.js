@@ -4,10 +4,6 @@ import { getConfig } from "./config.js";
 const api = globalThis.browser ?? globalThis.chrome;
 const MENU_PREFIX = "send-to-synology:";
 const PARENT_ID = "send-to-synology";
-// Match patterns can't be regexes: magnets, plus any http(s) URL with "torrent" in its path or query
-// (covers /x.torrent and sites like /torrent/download/<hash>).
-const LINK_PATTERNS = ["magnet:*", "*://*/*torrent*"];
-
 function notify(title, message) {
   api.notifications.create({
     type: "basic", iconUrl: api.runtime.getURL("icons/icon-128.png"), title, message,
@@ -15,6 +11,7 @@ function notify(title, message) {
 }
 
 const isMagnet = (u) => /^magnet:/i.test(u);
+const isTorrentUrl = (u) => /torrent/i.test(u.replace(/^[a-z]+:\/\/[^/]*/i, ""));
 
 async function send(link, destIndex = 0) {
   const cfg = await getConfig();
@@ -25,7 +22,8 @@ async function send(link, destIndex = 0) {
   const dest = cfg.destinations[destIndex] ?? cfg.destinations[0];
   const folder = dest?.folder ?? "";
   try {
-    if (isMagnet(link)) {
+    if (isMagnet(link) || !isTorrentUrl(link)) {
+      // Magnets, and plain links, which Download Station can fetch itself.
       await addUri(cfg, link, folder);
     } else {
       // Fetch in the browser (keeps the user's cookies for private trackers),
@@ -53,7 +51,8 @@ async function send(link, destIndex = 0) {
 async function buildMenu() {
   const { destinations } = await getConfig();
   await api.contextMenus.removeAll();
-  const base = { contexts: ["link"], targetUrlPatterns: LINK_PATTERNS };
+  // No targetUrlPatterns: Chrome can't match magnet: links, so the menu shows on every link.
+  const base = { contexts: ["link"] };
   if (destinations.length <= 1) {
     api.contextMenus.create({ ...base, id: `${MENU_PREFIX}0`, title: "Send to Synology Download Station" });
     return;
