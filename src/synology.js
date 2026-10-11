@@ -64,21 +64,22 @@ export async function logout(cfg, sid) {
   }).catch(() => {});
 }
 
-function taskForm(cfg, sid) {
+function taskForm(destination, sid) {
   const form = new FormData();
   form.set("api", "SYNO.DownloadStation.Task");
   form.set("version", "1");
   form.set("method", "create");
-  if (cfg.destination) form.set("destination", cfg.destination);
+  // Path is relative to the share root, e.g. "video/TV Shows" (no leading slash).
+  if (destination) form.set("destination", destination.replace(/^\/+|\/+$/g, ""));
   form.set("_sid", sid);
   return form;
 }
 
 /** Add a magnet link or http(s) URL to a .torrent. */
-export async function addUri(cfg, uri) {
+export async function addUri(cfg, uri, destination) {
   const sid = await login(cfg);
   try {
-    const form = taskForm(cfg, sid);
+    const form = taskForm(destination, sid);
     form.set("uri", uri);
     await call(cfg.url, "DownloadStation/task.cgi", null, form);
   } finally {
@@ -87,10 +88,10 @@ export async function addUri(cfg, uri) {
 }
 
 /** Upload a .torrent file's bytes. */
-export async function addFile(cfg, blob, filename) {
+export async function addFile(cfg, blob, filename, destination) {
   const sid = await login(cfg);
   try {
-    const form = taskForm(cfg, sid);
+    const form = taskForm(destination, sid);
     form.set("file", blob, filename); // file field must be last for DSM
     await call(cfg.url, "DownloadStation/task.cgi", null, form);
   } finally {

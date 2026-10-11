@@ -6,6 +6,9 @@
   label { display: block; margin: .8rem 0 .2rem; font-weight: 600; }
   input[type=text], input[type=url], input[type=password] { width: 100%; padding: .4rem; box-sizing: border-box; }
   .check { font-weight: normal; }
+  .dest { display: flex; gap: .4rem; margin-top: .4rem; }
+  .dest input { flex: 1; min-width: 0; }
+  .dest button { margin: 0; }
   button { margin: 1rem .5rem 0 0; padding: .4rem 1rem; }
   #status { margin-top: 1rem; min-height: 1.2em; }
   small { color: #666; }
@@ -23,8 +26,10 @@
   <label for="otp">2-step verification code (only if enabled on your account)</label>
   <input id="otp" type="text" inputmode="numeric" autocomplete="one-time-code" placeholder="123456">
   <small id="device">Enter a current code and click Test connection once. DSM then remembers this browser as a trusted device, so no further codes are needed.</small>
-  <label for="destination">Destination folder (optional)</label>
-  <input id="destination" type="text" placeholder="share/downloads">
+  <label>Download folders</label>
+  <small>Right-clicking a link offers each destination below. Folder is relative to the share root (e.g. <code>video/TV Shows</code>); leave blank for the Download Station default. The first row is used for left-click sends.</small>
+  <div id="destinations"></div>
+  <button type="button" id="add">Add destination</button>
   <label class="check"><input id="interceptClicks" type="checkbox"> Send magnet / .torrent links on left-click (instead of opening them)</label>
   <button type="submit">Save</button>
   <button type="button" id="test">Test connection</button>

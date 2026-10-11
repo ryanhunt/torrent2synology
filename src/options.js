@@ -1,14 +1,19 @@
 import { testConnection } from "./synology.js";
+import { getConfig } from "./config.js";
 
 const api = globalThis.browser ?? globalThis.chrome;
 const $ = (id) => document.getElementById(id);
-const fields = ["url", "username", "password", "destination"];
+const fields = ["url", "username", "password"];
 
 const status = (msg, err) => { $("status").textContent = msg; $("status").style.color = err ? "crimson" : "green"; };
 
 function read() {
   const cfg = Object.fromEntries(fields.map((f) => [f, $(f).value.trim()]));
   cfg.url = cfg.url.replace(/\/+$/, "");
+  cfg.destinations = [...document.querySelectorAll(".dest")]
+    .map((row) => ({ name: row.children[0].value.trim(), folder: row.children[1].value.trim() }))
+    .filter((d) => d.name || d.folder)
+    .map((d) => ({ name: d.name || d.folder, folder: d.folder }));
   cfg.interceptClicks = $("interceptClicks").checked;
   cfg.deviceId = deviceId;
   cfg.otp = $("otp").value.trim();
@@ -23,12 +28,28 @@ async function ensureHostAccess(url) {
 
 let deviceId = "";
 
-api.storage.local.get({ url: "", username: "", password: "", destination: "", interceptClicks: false, deviceId: "" }).then((cfg) => {
+function addRow(d = { name: "", folder: "" }) {
+  const row = document.createElement("div");
+  row.className = "dest";
+  const name = Object.assign(document.createElement("input"), { type: "text", placeholder: "Label, e.g. Movies", value: d.name });
+  const folder = Object.assign(document.createElement("input"), { type: "text", placeholder: "Folder, e.g. video/Movies", value: d.folder });
+  const remove = Object.assign(document.createElement("button"), { type: "button", textContent: "✕", title: "Remove" });
+  remove.addEventListener("click", () => row.remove());
+  row.append(name, folder, remove);
+  $("destinations").append(row);
+}
+
+let deviceId = "";
+
+getConfig().then((cfg) => {
   fields.forEach((f) => { $(f).value = cfg[f]; });
+  cfg.destinations.forEach(addRow);
   deviceId = cfg.deviceId;
   if (deviceId) $("device").textContent = "This browser is a trusted device; no code needed.";
   $("interceptClicks").checked = cfg.interceptClicks;
 });
+
+$("add").addEventListener("click", () => addRow());
 
 $("form").addEventListener("submit", async (e) => {
   e.preventDefault();

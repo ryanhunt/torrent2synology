@@ -3,6 +3,7 @@
 A Chrome and Firefox extension that sends torrent files and magnet links to a Synology Download Station.
 
 - Right-click a magnet link or `.torrent` link → **Send to Synology Download Station**
+- Configurable download folders (e.g. TV Shows, Movies): with more than one, the right-click menu becomes a submenu so you pick where each download goes
 - Optional setting: left-click on such links sends them directly
 - Talks to DSM's Download Station Web API (auth v6 + task v1); no server component needed
 
@@ -19,7 +20,7 @@ Source lives in `src/` (plain JS, no bundler). Manual load: Chrome → `chrome:/
 
 ## Setup
 
-Open the extension options, enter your NAS URL (the same address you use to reach DSM, including its port), a DSM username/password, and optionally a destination folder, then **Test connection**. Use a dedicated DSM account limited to Download Station. If the account uses 2-step verification, enter a current code in the options and click **Test connection** once. DSM registers the browser as a trusted device and the extension stores the device token, so later sends need no code. If DSM revokes the device (e.g. you remove it under Security), repeat that step. Only the DSM Web API is supported (no QuickConnect or other protocols).
+Open the extension options, enter your NAS URL (the same address you use to reach DSM, including its port), a DSM username/password, and one or more download folders (labels like TV Shows / Movies mapped to NAS folders, relative to the share root such as `video/Movies`), then **Test connection**. Use a dedicated DSM account limited to Download Station. If the account uses 2-step verification, enter a current code in the options and click **Test connection** once. DSM registers the browser as a trusted device and the extension stores the device token, so later sends need no code. If DSM revokes the device (e.g. you remove it under Security), repeat that step. Only the DSM Web API is supported (no QuickConnect or other protocols).
 
 ## Notes / TODO
 
