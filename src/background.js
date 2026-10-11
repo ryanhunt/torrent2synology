@@ -5,7 +5,7 @@ const MENU_ID = "send-to-synology";
 
 async function getConfig() {
   const cfg = await api.storage.local.get({
-    url: "", username: "", password: "", destination: "", interceptClicks: false,
+    url: "", username: "", password: "", destination: "", interceptClicks: false, deviceId: "",
   });
   cfg.url = cfg.url.replace(/\/+$/, "");
   return cfg;

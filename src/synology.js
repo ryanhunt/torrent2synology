@@ -22,26 +22,40 @@ const LOGIN_ERRORS = {
   400: "Invalid username or password",
   401: "Account disabled",
   402: "Permission denied",
-  403: "2-step verification code required",
-  404: "2-step verification failed",
+  403: "2-step verification required: open the extension settings, enter a current code and click Test connection",
+  404: "2-step verification code rejected",
 };
 
-export async function login(cfg) {
+// With 2FA: pass cfg.otp once; DSM then returns a device id (did) that is sent as
+// device_id on later logins so no further codes are needed.
+async function loginFull(cfg) {
+  const params = {
+    api: "SYNO.API.Auth",
+    version: "6",
+    method: "login",
+    account: cfg.username,
+    passwd: cfg.password,
+    session: "DownloadStation",
+    format: "sid",
+  };
+  if (cfg.otp) {
+    params.otp_code = cfg.otp;
+    params.enable_device_token = "yes";
+    params.device_name = "Torrent2Synology";
+  } else if (cfg.deviceId) {
+    params.device_id = cfg.deviceId;
+    params.device_name = "Torrent2Synology";
+  }
   try {
-    const data = await call(cfg.url, "auth.cgi", {
-      api: "SYNO.API.Auth",
-      version: "6",
-      method: "login",
-      account: cfg.username,
-      passwd: cfg.password,
-      session: "DownloadStation",
-      format: "sid",
-    });
-    return data.sid;
+    return await call(cfg.url, "auth.cgi", params);
   } catch (e) {
     if (LOGIN_ERRORS[e.code]) e.message = LOGIN_ERRORS[e.code];
     throw e;
   }
+}
+
+export async function login(cfg) {
+  return (await loginFull(cfg)).sid;
 }
 
 export async function logout(cfg, sid) {
@@ -84,7 +98,9 @@ export async function addFile(cfg, blob, filename) {
   }
 }
 
+/** Returns the trusted-device id when a 2FA code was used, else undefined. */
 export async function testConnection(cfg) {
-  const sid = await login(cfg);
+  const { sid, did } = await loginFull(cfg);
   await logout(cfg, sid);
+  return did;
 }

@@ -10,6 +10,8 @@ function read() {
   const cfg = Object.fromEntries(fields.map((f) => [f, $(f).value.trim()]));
   cfg.url = cfg.url.replace(/\/+$/, "");
   cfg.interceptClicks = $("interceptClicks").checked;
+  cfg.deviceId = deviceId;
+  cfg.otp = $("otp").value.trim();
   return cfg;
 }
 
@@ -19,8 +21,12 @@ async function ensureHostAccess(url) {
   return api.permissions.request({ origins: [origin] });
 }
 
-api.storage.local.get({ url: "", username: "", password: "", destination: "", interceptClicks: false }).then((cfg) => {
+let deviceId = "";
+
+api.storage.local.get({ url: "", username: "", password: "", destination: "", interceptClicks: false, deviceId: "" }).then((cfg) => {
   fields.forEach((f) => { $(f).value = cfg[f]; });
+  deviceId = cfg.deviceId;
+  if (deviceId) $("device").textContent = "This browser is a trusted device; no code needed.";
   $("interceptClicks").checked = cfg.interceptClicks;
 });
 
@@ -28,7 +34,8 @@ $("form").addEventListener("submit", async (e) => {
   e.preventDefault();
   const cfg = read();
   if (!(await ensureHostAccess(cfg.url))) return status("Host permission denied.", true);
-  await api.storage.local.set(cfg);
+  const { otp, ...stored } = cfg;
+  await api.storage.local.set(stored);
   status("Saved.");
 });
 
@@ -36,7 +43,13 @@ $("test").addEventListener("click", async () => {
   const cfg = read();
   try {
     if (!(await ensureHostAccess(cfg.url))) return status("Host permission denied.", true);
-    await testConnection(cfg);
+    const did = await testConnection(cfg);
+    if (did) {
+      deviceId = did;
+      await api.storage.local.set({ deviceId });
+      $("otp").value = "";
+      $("device").textContent = "This browser is now a trusted device; no code needed.";
+    }
     status("Connection OK.");
   } catch (e) {
     status(`Failed: ${e.message}`, true);
