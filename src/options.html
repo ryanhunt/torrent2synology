@@ -1,50 +1,88 @@
 <!doctype html>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Torrent2Synology settings</title>
-<style>
-  body { font: 14px system-ui, sans-serif; max-width: 480px; margin: 2rem auto; padding: 0 1rem; }
-  label { display: block; margin: .8rem 0 .2rem; font-weight: 600; }
-  input[type=text], input[type=url], input[type=password] { width: 100%; padding: .4rem; box-sizing: border-box; }
-  .check { font-weight: normal; }
-  .dest { display: flex; gap: .4rem; margin-top: .4rem; }
-  .dest input { flex: 1; min-width: 0; }
-  .dest button { margin: 0; }
-  button { margin: 1rem .5rem 0 0; padding: .4rem 1rem; }
-  #status { margin-top: 1rem; min-height: 1.2em; }
-  small { color: #666; }
-</style>
-<h1>Torrent2Synology</h1>
-<form id="form">
-  <label for="url">Download Station URL</label>
-  <input id="url" type="url" placeholder="https://nas.local:5001" required>
-  <small>Full address including the port, as you use it in your browser for DSM.</small>
-  <label for="username">Username</label>
-  <input id="username" type="text" autocomplete="username" required>
-  <label for="password">Password</label>
-  <input id="password" type="password" autocomplete="current-password">
-  <small>Stored unencrypted in browser extension storage unless you enable passphrase protection below. Use a dedicated DSM account with only Download Station permission.</small>
-  <label class="check"><input id="protect" type="checkbox"> Protect the password with a passphrase</label>
-  <div id="protectBox" hidden>
-    <label for="passphrase">Passphrase</label>
-    <input id="passphrase" type="password" autocomplete="off">
-    <small id="lockstatus"></small>
-    <button type="button" id="unlock">Unlock</button>
-    <button type="button" id="lock">Lock now</button>
-    <button type="button" id="forgot">Forgot passphrase</button>
-  </div>
-  <label for="otp">2-step verification code (only if enabled on your account)</label>
-  <input id="otp" type="text" inputmode="numeric" autocomplete="one-time-code" placeholder="123456">
-  <small id="device">Enter a current code and click Test connection once. DSM then remembers this browser as a trusted device, so no further codes are needed.</small>
-  <label>Download folders</label>
-  <small>Right-clicking a link offers each destination below. Folder is relative to the share root (e.g. <code>video/TV Shows</code>); leave blank for the Download Station default.</small>
-  <div id="destinations"></div>
-  <button type="button" id="add">Add destination</button>
-  <label class="check"><input id="interceptClicks" type="checkbox"> Send magnet / .torrent links on left-click (instead of opening them)</label>
-  <label for="leftClickFolder">Left-click folder</label>
-  <input id="leftClickFolder" type="text" placeholder="e.g. video/Downloads">
-  <small>Used for left-click sends (the option above). Blank = Download Station's default folder.</small>
-  <button type="submit">Save</button>
-  <button type="button" id="test">Test connection</button>
-</form>
-<div id="status"></div>
+<link rel="stylesheet" href="vendor/bootstrap.min.css">
+<main class="container py-4" style="max-width: 720px">
+  <h1 class="h3 mb-4">Torrent2Synology</h1>
+
+  <form id="form" class="vstack gap-3">
+
+    <section class="card">
+      <div class="card-header fw-semibold">Server settings</div>
+      <div class="card-body vstack gap-3">
+        <div>
+          <label for="url" class="form-label">Download Station URL</label>
+          <input id="url" type="url" class="form-control" placeholder="https://nas.local:5001" required>
+          <div class="form-text">Full address including the port, as you use it in your browser for DSM.</div>
+        </div>
+        <div>
+          <label for="username" class="form-label">Username</label>
+          <input id="username" type="text" class="form-control" autocomplete="username" required>
+        </div>
+        <div>
+          <label for="password" class="form-label">Password</label>
+          <input id="password" type="password" class="form-control" autocomplete="current-password">
+          <div class="form-text">Stored unencrypted in browser extension storage unless you enable encryption below. Use a dedicated DSM account with only Download Station permission.</div>
+        </div>
+        <div>
+          <label for="otp" class="form-label">2-step verification code <span class="text-body-secondary">(only if enabled on your account)</span></label>
+          <input id="otp" type="text" class="form-control" inputmode="numeric" autocomplete="one-time-code" placeholder="123456">
+          <div id="device" class="form-text">Enter a current code and click Test connection once. DSM then remembers this browser as a trusted device, so no further codes are needed.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <label for="protect" class="fw-semibold mb-0">Encryption</label>
+        <div class="form-check form-switch mb-0">
+          <input id="protect" type="checkbox" class="form-check-input" role="switch">
+        </div>
+      </div>
+      <div id="protectBox" class="card-body vstack gap-3" hidden>
+        <div>
+          <label for="passphrase" class="form-label">Protect password with a passphrase</label>
+          <input id="passphrase" type="password" class="form-control" autocomplete="off">
+          <div id="lockstatus" class="form-text"></div>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+          <button type="button" id="unlock" class="btn btn-outline-primary">Unlock</button>
+          <button type="button" id="lock" class="btn btn-outline-secondary">Lock now</button>
+          <button type="button" id="forgot" class="btn btn-outline-danger">Clear stored password</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-header fw-semibold">Download folders</div>
+      <div class="card-body">
+        <p class="form-text mt-0">Right-clicking a link offers each destination below. Folder is relative to the share root (e.g. <code>video/TV Shows</code>); leave blank for the Download Station default.</p>
+        <div id="destinations"></div>
+        <button type="button" id="add" class="btn btn-sm btn-outline-secondary">Add destination</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <label for="interceptClicks" class="fw-semibold mb-0">Left click</label>
+        <div class="form-check form-switch mb-0">
+          <input id="interceptClicks" type="checkbox" class="form-check-input" role="switch">
+        </div>
+      </div>
+      <div id="leftBox" class="card-body" hidden>
+        <p class="form-text mt-0">Send magnet / .torrent links on left-click instead of opening them. Hold Ctrl, Cmd, Shift or Alt to open normally.</p>
+        <label for="leftClickFolder" class="form-label">Left-click folder</label>
+        <input id="leftClickFolder" type="text" class="form-control" placeholder="e.g. video/Downloads">
+        <div class="form-text">Blank = Download Station's default folder.</div>
+      </div>
+    </section>
+
+    <div class="d-flex gap-2">
+      <button type="submit" class="btn btn-primary">Save</button>
+      <button type="button" id="test" class="btn btn-outline-secondary">Test connection</button>
+    </div>
+    <div id="status" role="status" class="alert mb-0" hidden></div>
+  </form>
+</main>
 <script type="module" src="options.js"></script>

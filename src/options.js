@@ -6,7 +6,16 @@ const api = globalThis.browser ?? globalThis.chrome;
 const $ = (id) => document.getElementById(id);
 const fields = ["url", "username", "leftClickFolder"];
 
-const status = (msg, err) => { $("status").textContent = msg; $("status").style.color = err ? "crimson" : "green"; };
+document.documentElement.dataset.bsTheme = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+
+const status = (msg, err) => {
+  const el = $("status");
+  el.textContent = msg;
+  el.className = `alert mb-0 ${err ? "alert-danger" : "alert-success"}`;
+  el.hidden = false;
+};
+
+const refreshLeftUI = () => { $("leftBox").hidden = !$("interceptClicks").checked; };
 
 function read() {
   const cfg = Object.fromEntries(fields.map((f) => [f, $(f).value.trim()]));
@@ -47,10 +56,10 @@ async function refreshProtectUI() {
 
 function addRow(d = { name: "", folder: "" }) {
   const row = document.createElement("div");
-  row.className = "dest";
-  const name = Object.assign(document.createElement("input"), { type: "text", placeholder: "Label, e.g. Movies", value: d.name });
-  const folder = Object.assign(document.createElement("input"), { type: "text", placeholder: "Folder, e.g. video/Movies", value: d.folder });
-  const remove = Object.assign(document.createElement("button"), { type: "button", textContent: "✕", title: "Remove" });
+  row.className = "dest input-group mb-2";
+  const name = Object.assign(document.createElement("input"), { type: "text", className: "form-control", placeholder: "Label, e.g. Movies", value: d.name });
+  const folder = Object.assign(document.createElement("input"), { type: "text", className: "form-control", placeholder: "Folder, e.g. video/Movies", value: d.folder });
+  const remove = Object.assign(document.createElement("button"), { type: "button", className: "btn btn-outline-secondary", textContent: "✕", title: "Remove" });
   remove.addEventListener("click", () => row.remove());
   row.append(name, folder, remove);
   $("destinations").append(row);
@@ -66,11 +75,13 @@ getConfig().then((cfg) => {
   deviceId = cfg.deviceId;
   if (deviceId) $("device").textContent = "This browser is a trusted device; no code needed.";
   $("interceptClicks").checked = cfg.interceptClicks;
+  refreshLeftUI();
 });
 
 $("add").addEventListener("click", () => addRow());
 
 $("protect").addEventListener("change", refreshProtectUI);
+$("interceptClicks").addEventListener("change", refreshLeftUI);
 
 $("unlock").addEventListener("click", async () => {
   try {
@@ -92,7 +103,7 @@ $("lock").addEventListener("click", async () => {
 });
 
 $("forgot").addEventListener("click", async () => {
-  if (!confirm("This permanently deletes the saved (encrypted) password. Your other settings are kept. Continue?")) return;
+  if (!confirm("This permanently deletes the stored (encrypted) password. Your other settings are kept. Continue?")) return;
   await api.storage.local.remove(["password", "encrypted"]);
   await api.storage.local.set({ passwordProtected: false });
   await api.storage.session.remove("password");
@@ -101,7 +112,7 @@ $("forgot").addEventListener("click", async () => {
   $("password").value = "";
   $("passphrase").value = "";
   refreshProtectUI();
-  status("Saved password deleted. Enter the password again and click Save.");
+  status("Stored password cleared. Enter the password again and click Save.");
 });
 
 $("form").addEventListener("submit", async (e) => {

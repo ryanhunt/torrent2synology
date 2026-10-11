@@ -7,6 +7,7 @@
   "license": "MIT",
   "scripts": {
     "prepare": "git config core.hooksPath .githooks",
+    "vendor": "mkdir -p src/vendor && cp node_modules/bootstrap/dist/css/bootstrap.min.css src/vendor/",
     "test": "node scripts/test-crypto.mjs",
     "check:secrets": "node scripts/check-secrets.mjs staged",
     "lint": "web-ext lint --source-dir src",
@@ -15,6 +16,7 @@
     "build": "node scripts/build.mjs"
   },
   "devDependencies": {
+    "bootstrap": "5.3",
     "web-ext": "^8.0.0"
   }
 }

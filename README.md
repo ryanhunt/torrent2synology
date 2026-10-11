@@ -16,7 +16,7 @@ npm run lint
 npm run build         # dist/torrent2synology.zip
 ```
 
-Source lives in `src/` (plain JS, no bundler). Manual load: Chrome → `chrome://extensions` → Load unpacked → `src/`; Firefox → `about:debugging` → Load Temporary Add-on → `src/manifest.json`.
+Source lives in `src/` (plain JS, no bundler). The options page uses Bootstrap's CSS, vendored at `src/vendor/bootstrap.min.css` (refresh it with `npm run vendor` after upgrading the `bootstrap` dev dependency). Manual load: Chrome → `chrome://extensions` → Load unpacked → `src/`; Firefox → `about:debugging` → Load Temporary Add-on → `src/manifest.json`.
 
 ## Setup
 
